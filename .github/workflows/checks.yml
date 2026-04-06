@@ -88,6 +88,7 @@ jobs:
       - name: Run lint action
         uses: ./.github/workflows/lint-action
   prepare_test_image_fixtures:
+    if: ${{ github.base_ref != 'release/v2.0.3-ns' && github.ref_name != 'release/v2.0.3-ns' }}
     permissions:
       contents: read # to fetch code (actions/checkout)
     runs-on: ubuntu-latest
@@ -103,6 +104,7 @@ jobs:
           path: internal/image/fixtures/*.tar
           retention-days: 1
   tests:
+    if: ${{ github.base_ref != 'release/v2.0.3-ns' && github.ref_name != 'release/v2.0.3-ns' }}
     permissions:
       contents: read # to fetch code (actions/checkout)
     needs:
@@ -133,6 +135,7 @@ jobs:
           codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   tests_windows_no_cache:
+    if: ${{ github.base_ref != 'release/v2.0.3-ns' && github.ref_name != 'release/v2.0.3-ns' }}
     permissions:
       contents: read # to fetch code (actions/checkout)
     needs:
@@ -158,6 +161,33 @@ jobs:
         uses: ./.github/workflows/test-action
         with:
           codecov_token: ${{ secrets.CODECOV_TOKEN }}
+  release_tests:
+    if: ${{ github.base_ref == 'release/v2.0.3-ns' || github.ref_name == 'release/v2.0.3-ns' }}
+    permissions:
+      contents: read # to fetch code (actions/checkout)
+    name: Run release-branch tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Set up Go
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version-file: go.mod
+          check-latest: true
+      - name: Run release-branch test suite
+        run: |
+          go test \
+            ./internal/clients/clientimpl/osvmatcher \
+            ./pkg/osvscanner \
+            ./internal/imodels/ecosystem \
+            ./cmd/osv-scanner \
+            ./cmd/osv-scanner/scan \
+            ./internal/output
+      - name: Build osv-scanner
+        run: go build ./cmd/osv-scanner
   docker:
     permissions:
       contents: read # to fetch code (actions/checkout)

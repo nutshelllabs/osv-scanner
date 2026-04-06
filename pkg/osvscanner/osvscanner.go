@@ -55,6 +55,8 @@ type ScannerActions struct {
 }
 
 type ExperimentalScannerActions struct {
+	TransitiveScanningActions
+
 	CompareOffline        bool
 	DownloadDatabases     bool
 	ShowAllPackages       bool
@@ -62,7 +64,6 @@ type ExperimentalScannerActions struct {
 	ScanLicensesAllowlist []string
 
 	LocalDBPath string
-	TransitiveScanningActions
 
 	Extractors []filesystem.Extractor
 }

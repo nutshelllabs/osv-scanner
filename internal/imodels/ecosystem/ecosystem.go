@@ -17,6 +17,7 @@ var ecosystemsWithSuffix = map[osvschema.Ecosystem]struct{}{
 	osvschema.EcosystemMageia:     {},
 	osvschema.EcosystemMaven:      {},
 	osvschema.EcosystemOpenSUSE:   {},
+	osvschema.EcosystemPackagist:  {},
 	osvschema.EcosystemPhotonOS:   {},
 	osvschema.EcosystemRedHat:     {},
 	osvschema.EcosystemRockyLinux: {},

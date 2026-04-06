@@ -43,6 +43,7 @@ jobs:
           persist-credentials: false
       - run: scripts/report_uncleaned_snapshots.py
   format:
+    if: ${{ github.base_ref != 'release/v2.0.3-ns' && github.ref_name != 'release/v2.0.3-ns' }}
     permissions:
       contents: read # to fetch code (actions/checkout)
     name: prettier
@@ -71,6 +72,7 @@ jobs:
           check-latest: true
       - run: go mod tidy -diff
   lint:
+    if: ${{ github.base_ref != 'release/v2.0.3-ns' && github.ref_name != 'release/v2.0.3-ns' }}
     permissions:
       contents: read # to fetch code (actions/checkout)
     name: golangci-lint

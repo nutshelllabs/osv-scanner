@@ -38,7 +38,10 @@ import (
 	"osv.dev/bindings/go/osvdev"
 )
 
+// ScannerActions contains scan inputs and feature flags.
 type ScannerActions struct {
+	ExperimentalScannerActions
+
 	LockfilePaths      []string
 	SBOMPaths          []string
 	DirectoryPaths     []string
@@ -50,11 +53,12 @@ type ScannerActions struct {
 	IsImageArchive     bool
 	ConfigOverridePath string
 	CallAnalysisStates map[string]bool
-
-	ExperimentalScannerActions
 }
 
+// ExperimentalScannerActions contains feature flags that extend ScannerActions.
 type ExperimentalScannerActions struct {
+	TransitiveScanningActions
+
 	CompareOffline        bool
 	DownloadDatabases     bool
 	ShowAllPackages       bool
@@ -62,11 +66,11 @@ type ExperimentalScannerActions struct {
 	ScanLicensesAllowlist []string
 
 	LocalDBPath string
-	TransitiveScanningActions
 
 	Extractors []filesystem.Extractor
 }
 
+// TransitiveScanningActions controls transitive dependency analysis behavior.
 type TransitiveScanningActions struct {
 	Disabled         bool
 	NativeDataSource bool
@@ -122,7 +126,11 @@ func initializeExternalAccessors(actions ScannerActions) (ExternalAccessors, err
 	// Online Mode
 	// -----------
 	// --- Vulnerability Matcher ---
-	externalAccessors.VulnMatcher = &osvmatcher.OSVMatcher{
+	slog.Info("Using cached OSV matcher for online scan")
+	// Cache package vulnerability sets once per scan so repeated dependencies
+	// across multiple manifests do not trigger duplicate OSV package queries.
+	// Commit-based queries are still passed through directly by the matcher.
+	externalAccessors.VulnMatcher = &osvmatcher.CachedOSVMatcher{
 		Client:              *osvdev.DefaultClient(),
 		InitialQueryTimeout: 5 * time.Minute,
 	}

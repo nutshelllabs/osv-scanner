@@ -263,12 +263,11 @@ func (res *Result) FilterVulns(matchFn func(Vulnerability) bool) {
 }
 
 type Difference struct {
-	manifest.Patch
-
 	Original     *Result
 	New          *Result
 	RemovedVulns []Vulnerability
 	AddedVulns   []Vulnerability
+	manifest.Patch
 }
 
 func (res *Result) CalculateDiff(other *Result) Difference {

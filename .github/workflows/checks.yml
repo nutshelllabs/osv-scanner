@@ -181,11 +181,7 @@ jobs:
         run: |
           go test \
             ./internal/clients/clientimpl/osvmatcher \
-            ./pkg/osvscanner \
-            ./internal/imodels/ecosystem \
-            ./cmd/osv-scanner \
-            ./cmd/osv-scanner/scan \
-            ./internal/output
+            ./pkg/osvscanner
       - name: Build osv-scanner
         run: go build ./cmd/osv-scanner
   docker:

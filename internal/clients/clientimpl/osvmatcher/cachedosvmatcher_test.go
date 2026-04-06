@@ -46,6 +46,7 @@ func TestCachedOSVMatcher_buildQueryPlanDeduplicatesRepeatedPackages(t *testing.
 	for _, query := range plan.queries {
 		gotNames[query.Package.Name]++
 	}
+
 	wantNames := map[string]int{
 		"abc": 1,
 		"xyz": 1,
@@ -73,16 +74,20 @@ func TestCachedOSVMatcher_MatchVulnerabilitiesPassesThroughCommitQueries(t *test
 		switch {
 		case r.Method == http.MethodPost && r.URL.Path == osvdev.QueryBatchEndpoint:
 			var batch osvdev.BatchedQuery
-			if err := json.NewDecoder(r.Body).Decode(&batch); err != nil {
-				t.Fatalf("decode batched query: %v", err)
+
+			decodeErr := json.NewDecoder(r.Body).Decode(&batch)
+			if decodeErr != nil {
+				t.Fatalf("decode batched query: %v", decodeErr)
 			}
 
 			mu.Lock()
+
 			copied := make([]*osvdev.Query, len(batch.Queries))
 			for i, query := range batch.Queries {
 				queryCopy := *query
 				copied[i] = &queryCopy
 			}
+
 			recordedBatches = append(recordedBatches, copied)
 			mu.Unlock()
 
@@ -100,11 +105,13 @@ func TestCachedOSVMatcher_MatchVulnerabilitiesPassesThroughCommitQueries(t *test
 				}
 			}
 
-			if err := json.NewEncoder(w).Encode(resp); err != nil {
-				t.Fatalf("encode batched response: %v", err)
+			encodeErr := json.NewEncoder(w).Encode(resp)
+			if encodeErr != nil {
+				t.Fatalf("encode batched response: %v", encodeErr)
 			}
 		case r.Method == http.MethodGet && r.URL.Path == osvdev.GetEndpoint+"/PKG-1":
 			mu.Lock()
+
 			recordedGets = append(recordedGets, "PKG-1")
 			mu.Unlock()
 
@@ -118,26 +125,34 @@ func TestCachedOSVMatcher_MatchVulnerabilitiesPassesThroughCommitQueries(t *test
 					Versions: []string{"1.2.1", "1.3.0"},
 				}},
 			}
-			if err := json.NewEncoder(w).Encode(vuln); err != nil {
-				t.Fatalf("encode package vulnerability: %v", err)
+
+			encodeErr := json.NewEncoder(w).Encode(vuln)
+			if encodeErr != nil {
+				t.Fatalf("encode package vulnerability: %v", encodeErr)
 			}
 		case r.Method == http.MethodGet && r.URL.Path == osvdev.GetEndpoint+"/COMMIT-1":
 			mu.Lock()
+
 			recordedGets = append(recordedGets, "COMMIT-1")
 			mu.Unlock()
 
 			vuln := osvschema.Vulnerability{ID: "COMMIT-1"}
-			if err := json.NewEncoder(w).Encode(vuln); err != nil {
-				t.Fatalf("encode commit vulnerability: %v", err)
+
+			encodeErr := json.NewEncoder(w).Encode(vuln)
+			if encodeErr != nil {
+				t.Fatalf("encode commit vulnerability: %v", encodeErr)
 			}
 		case r.Method == http.MethodGet && r.URL.Path == osvdev.GetEndpoint+"/HACKAGE-1":
 			mu.Lock()
+
 			recordedGets = append(recordedGets, "HACKAGE-1")
 			mu.Unlock()
 
 			vuln := osvschema.Vulnerability{ID: "HACKAGE-1"}
-			if err := json.NewEncoder(w).Encode(vuln); err != nil {
-				t.Fatalf("encode hackage vulnerability: %v", err)
+
+			encodeErr := json.NewEncoder(w).Encode(vuln)
+			if encodeErr != nil {
+				t.Fatalf("encode hackage vulnerability: %v", encodeErr)
 			}
 		default:
 			t.Fatalf("unexpected request: %s %s", r.Method, r.URL.Path)
@@ -181,6 +196,7 @@ func TestCachedOSVMatcher_MatchVulnerabilitiesPassesThroughCommitQueries(t *test
 	if got, want := len(recordedBatches[0]), 1; got != want {
 		t.Fatalf("package query batch size = %d, want %d", got, want)
 	}
+
 	if recordedBatches[0][0].Package.Name != "abc" || recordedBatches[0][0].Commit != "" {
 		t.Fatalf("package query = %#v, want package abc query", recordedBatches[0][0])
 	}
@@ -188,14 +204,17 @@ func TestCachedOSVMatcher_MatchVulnerabilitiesPassesThroughCommitQueries(t *test
 	if got, want := len(recordedBatches[1]), 2; got != want {
 		t.Fatalf("passthrough query batch size = %d, want %d", got, want)
 	}
+
 	if recordedBatches[1][0].Commit != "33dffa3909a67e1b5d22647128ab7eb6e53fd0c7" {
 		t.Fatalf("passthrough commit query = %#v, want commit query", recordedBatches[1][0])
 	}
+
 	if recordedBatches[1][1].Package.Name != "hpack" || recordedBatches[1][1].Version != "0.38.0" {
 		t.Fatalf("passthrough package query = %#v, want versioned hackage query", recordedBatches[1][1])
 	}
 
 	slices.Sort(recordedGets)
+
 	if want := []string{"COMMIT-1", "HACKAGE-1", "PKG-1"}; !reflect.DeepEqual(recordedGets, want) {
 		t.Fatalf("hydrated vulnerability IDs = %#v, want %#v", recordedGets, want)
 	}

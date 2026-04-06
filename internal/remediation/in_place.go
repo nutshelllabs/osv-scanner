@@ -22,7 +22,6 @@ import (
 
 type InPlacePatch struct {
 	lf.DependencyPatch
-
 	ResolvedVulns []resolution.Vulnerability
 }
 

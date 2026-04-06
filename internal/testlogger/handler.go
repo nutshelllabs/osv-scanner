@@ -86,17 +86,6 @@ func (tl *Handler) Handle(ctx context.Context, record slog.Record) error {
 		"osrelease.ParseOsRelease(): file does not exist",
 		"Status: new inodes:",
 		"Created image content file:",
-		"Using cached OSV matcher for online scan",
-		"osv matcher=cached",
-		"  summary:",
-		"  repeated_packages:",
-		"  - inventories=",
-		"  - deduped_batched_package_query_entries=",
-		"  - duplicate_package_entries_suppressed=",
-		"  - package_cache_hits=",
-		"  - query_batch_requests=",
-		"  - vulnerability_detail_requests=",
-		"  - ecosystem=",
 	} {
 		if strings.HasPrefix(record.Message, prefix) {
 			return nil

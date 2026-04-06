@@ -22,7 +22,7 @@ import (
 	"github.com/ossf/osv-schema/bindings/go/osvschema"
 )
 
-var userAgent = "osv-scanner_test/" + version.OSVVersion
+const userAgent = "osv-scanner_test/" + version.OSVVersion
 
 func expectDBToHaveOSVs(
 	t *testing.T,

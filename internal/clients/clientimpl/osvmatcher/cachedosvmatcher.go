@@ -53,14 +53,18 @@ type directQueryResult struct {
 
 func batchQueryPagingWithMetrics(ctx context.Context, c *osvdev.OSVClient, queries []*osvdev.Query, metrics *batchQueryMetrics) (*osvdev.BatchedResponse, error) {
 	metrics.queryBatchRequests++
+
 	batchResp, err := c.QueryBatch(ctx, queries)
 	if err != nil {
 		return nil, err
 	}
 
-	var errToReturn error
-	var nextPageQueries []*osvdev.Query
-	var nextPageIndexMap []int
+	var (
+		errToReturn      error
+		nextPageQueries  []*osvdev.Query
+		nextPageIndexMap []int
+	)
+
 	for i, res := range batchResp.Results {
 		if res.NextPageToken == "" {
 			continue
@@ -111,6 +115,7 @@ func (matcher *CachedOSVMatcher) MatchVulnerabilities(ctx context.Context, invs 
 	packageInvs := make([]*extractor.Package, 0, len(invs))
 	passthroughInvs := make([]*extractor.Package, 0)
 	passthroughIndexes := make([]int, 0)
+
 	for i, inv := range invs {
 		pkgInfo := imodels.FromInventory(inv)
 		switch {
@@ -136,6 +141,7 @@ func (matcher *CachedOSVMatcher) MatchVulnerabilities(ctx context.Context, invs 
 		if pkgInfo.Name() == "" || pkgInfo.Ecosystem().IsEmpty() {
 			continue
 		}
+
 		pkg := osvdev.Package{
 			Name:      pkgInfo.Name(),
 			Ecosystem: pkgInfo.Ecosystem().String(),
@@ -151,8 +157,10 @@ func (matcher *CachedOSVMatcher) MatchVulnerabilities(ctx context.Context, invs 
 	if err != nil {
 		return nil, err
 	}
+
 	queryMetrics.queryBatchRequests += passthroughMetrics.queryBatchRequests
 	queryMetrics.vulnDetailRequests += passthroughMetrics.vulnDetailRequests
+
 	for i, res := range passthroughResults {
 		results[passthroughIndexes[i]] = res.vulnerabilities
 	}
@@ -172,6 +180,7 @@ func (matcher *CachedOSVMatcher) buildQueryPlan(invs []*extractor.Package) cache
 		if pkgInfo.Name() == "" || pkgInfo.Ecosystem().IsEmpty() {
 			continue
 		}
+
 		pkg := osvdev.Package{
 			Name:      pkgInfo.Name(),
 			Ecosystem: pkgInfo.Ecosystem().String(),
@@ -196,6 +205,7 @@ func (matcher *CachedOSVMatcher) buildQueryPlan(invs []*extractor.Package) cache
 		if count <= 1 {
 			continue
 		}
+
 		plan.repeatedPackageLines = append(
 			plan.repeatedPackageLines,
 			fmt.Sprintf(
@@ -207,14 +217,17 @@ func (matcher *CachedOSVMatcher) buildQueryPlan(invs []*extractor.Package) cache
 			),
 		)
 	}
+
 	slices.Sort(plan.repeatedPackageLines)
 
 	return plan
 }
 
 func (matcher *CachedOSVMatcher) doQueries(ctx context.Context, invs []*extractor.Package) (cachedQueryPlan, batchQueryMetrics, error) {
-	var batchResp *osvdev.BatchedResponse
-	deadlineExceeded := false
+	var (
+		batchResp        *osvdev.BatchedResponse
+		deadlineExceeded bool
+	)
 
 	plan := matcher.buildQueryPlan(invs)
 	queries := plan.queries
@@ -230,6 +243,7 @@ func (matcher *CachedOSVMatcher) doQueries(ctx context.Context, invs []*extracto
 	if matcher.InitialQueryTimeout > 0 {
 		batchQueryCtx, cancelFunc := context.WithDeadline(ctx, time.Now().Add(matcher.InitialQueryTimeout))
 		batchResp, err = batchQueryPagingWithMetrics(batchQueryCtx, &matcher.Client, queries, &queryMetrics)
+
 		cancelFunc()
 	} else {
 		batchResp, err = batchQueryPagingWithMetrics(ctx, &matcher.Client, queries, &queryMetrics)
@@ -265,10 +279,12 @@ func (matcher *CachedOSVMatcher) doQueries(ctx context.Context, invs []*extracto
 				if ctx.Err() != nil {
 					return nil //nolint:nilerr // this value doesn't matter to errgroup.Wait()
 				}
+
 				vuln, err := matcher.Client.GetVulnByID(ctx, vuln.ID)
 				if err != nil {
 					return err
 				}
+
 				vulnerabilities[batchIdx][resultIdx] = *vuln
 
 				return nil
@@ -276,7 +292,8 @@ func (matcher *CachedOSVMatcher) doQueries(ctx context.Context, invs []*extracto
 		}
 	}
 
-	if err := g.Wait(); err != nil {
+	err = g.Wait()
+	if err != nil {
 		return plan, queryMetrics, err
 	}
 
@@ -296,15 +313,20 @@ func (matcher *CachedOSVMatcher) matchDirectQueries(ctx context.Context, invs []
 		return nil, batchQueryMetrics{}, nil
 	}
 
-	var batchResp *osvdev.BatchedResponse
-	deadlineExceeded := false
+	var (
+		batchResp        *osvdev.BatchedResponse
+		deadlineExceeded bool
+	)
+
 	queryMetrics := batchQueryMetrics{}
 	queries := invsToQueries(invs)
 
 	var err error
+
 	if matcher.InitialQueryTimeout > 0 {
 		batchQueryCtx, cancelFunc := context.WithDeadline(ctx, time.Now().Add(matcher.InitialQueryTimeout))
 		batchResp, err = batchQueryPagingWithMetrics(batchQueryCtx, &matcher.Client, queries, &queryMetrics)
+
 		cancelFunc()
 	} else {
 		batchResp, err = batchQueryPagingWithMetrics(ctx, &matcher.Client, queries, &queryMetrics)
@@ -337,10 +359,12 @@ func (matcher *CachedOSVMatcher) matchDirectQueries(ctx context.Context, invs []
 				if ctx.Err() != nil {
 					return nil //nolint:nilerr // this value doesn't matter to errgroup.Wait()
 				}
+
 				vuln, err := matcher.Client.GetVulnByID(ctx, vuln.ID)
 				if err != nil {
 					return err
 				}
+
 				results[batchIdx].vulnerabilities[resultIdx] = vuln
 
 				return nil
@@ -348,7 +372,8 @@ func (matcher *CachedOSVMatcher) matchDirectQueries(ctx context.Context, invs []
 		}
 	}
 
-	if err := g.Wait(); err != nil {
+	err = g.Wait()
+	if err != nil {
 		return nil, queryMetrics, err
 	}
 
@@ -367,12 +392,15 @@ func (matcher *CachedOSVMatcher) logSummary(inventoryCount int, plan cachedQuery
 	slog.Info(fmt.Sprintf("  - duplicate_package_entries_suppressed=%d", plan.duplicateSuppressed))
 	slog.Info(fmt.Sprintf("  - package_cache_hits=%d", plan.cacheHits))
 	slog.Info(fmt.Sprintf("  - query_batch_requests=%d", metrics.queryBatchRequests))
+
 	if len(plan.repeatedPackageLines) > 0 {
 		slog.Info("  repeated_packages:")
+
 		for _, repeatedPkg := range plan.repeatedPackageLines {
 			slog.Info("  - " + repeatedPkg)
 		}
 	}
+
 	slog.Info(fmt.Sprintf("  - vulnerability_detail_requests=%d", metrics.vulnDetailRequests))
 }
 

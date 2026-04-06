@@ -48,7 +48,6 @@ const (
 
 type osvFixOptions struct {
 	remediation.Options
-
 	Client      client.ResolutionClient
 	Manifest    string
 	ManifestRW  manifest.ReadWriter

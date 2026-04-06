@@ -52,7 +52,7 @@ var remediationOpts = remediation.Options{
 	UpgradeConfig: upgrade.NewConfig(),
 }
 
-var userAgent = "osv-scanner_generate_mock/" + version.OSVVersion
+const userAgent = "osv-scanner_generate_mock/" + version.OSVVersion
 
 func vulnMatcher() clientinterfaces.VulnerabilityMatcher {
 	config := osvdev.DefaultConfig()

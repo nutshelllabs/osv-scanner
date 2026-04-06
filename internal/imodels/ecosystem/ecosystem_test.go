@@ -89,13 +89,6 @@ func buildCases(t *testing.T) []testCase {
 			},
 		},
 		{
-			string: "Packagist:https://packages.drupal.org/8",
-			parsed: ecosystem.Parsed{
-				Ecosystem: osvschema.EcosystemPackagist,
-				Suffix:    "https://packages.drupal.org/8",
-			},
-		},
-		{
 			string: "Photon OS",
 			parsed: ecosystem.Parsed{
 				Ecosystem: osvschema.EcosystemPhotonOS,

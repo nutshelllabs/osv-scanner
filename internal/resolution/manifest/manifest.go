@@ -108,7 +108,6 @@ func GetReadWriter(pathToManifest string, registry string) (ReadWriter, error) {
 // It does not include the version specification.
 type RequirementKey struct {
 	resolve.PackageKey
-
 	EcosystemSpecific any
 }
 

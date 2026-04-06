@@ -41,7 +41,6 @@ func SupportsInPlace(l lockfile.ReadWriter) bool {
 
 type Options struct {
 	resolution.ResolveOpts
-
 	IgnoreVulns   []string // Vulnerability IDs to ignore
 	ExplicitVulns []string // If set, only consider these vulnerability IDs & ignore all others
 

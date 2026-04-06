@@ -38,7 +38,10 @@ import (
 	"osv.dev/bindings/go/osvdev"
 )
 
+// ScannerActions contains scan inputs and feature flags.
 type ScannerActions struct {
+	ExperimentalScannerActions
+
 	LockfilePaths      []string
 	SBOMPaths          []string
 	DirectoryPaths     []string
@@ -50,10 +53,9 @@ type ScannerActions struct {
 	IsImageArchive     bool
 	ConfigOverridePath string
 	CallAnalysisStates map[string]bool
-
-	ExperimentalScannerActions
 }
 
+// ExperimentalScannerActions contains feature flags that extend ScannerActions.
 type ExperimentalScannerActions struct {
 	TransitiveScanningActions
 
@@ -68,6 +70,7 @@ type ExperimentalScannerActions struct {
 	Extractors []filesystem.Extractor
 }
 
+// TransitiveScanningActions controls transitive dependency analysis behavior.
 type TransitiveScanningActions struct {
 	Disabled         bool
 	NativeDataSource bool

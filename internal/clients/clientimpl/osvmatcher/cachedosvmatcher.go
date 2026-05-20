@@ -277,10 +277,6 @@ func (matcher *CachedOSVMatcher) doQueries(ctx context.Context, pkgs []*extracto
 		queryMetrics.vulnDetailRequests += len(resp.GetVulns())
 		vulnerabilities[batchIdx] = make([]*osvschema.Vulnerability, len(resp.GetVulns()))
 		for resultIdx, vuln := range resp.GetVulns() {
-			batchIdx := batchIdx
-			resultIdx := resultIdx
-			vuln := vuln
-
 			g.Go(func() error {
 				if ctx.Err() != nil {
 					return nil //nolint:nilerr // this value doesn't matter to errgroup.Wait()
@@ -354,10 +350,6 @@ func (matcher *CachedOSVMatcher) matchDirectQueries(ctx context.Context, pkgs []
 		queryMetrics.vulnDetailRequests += len(resp.GetVulns())
 
 		for resultIdx, vuln := range resp.GetVulns() {
-			batchIdx := batchIdx
-			resultIdx := resultIdx
-			vuln := vuln
-
 			g.Go(func() error {
 				if ctx.Err() != nil {
 					return nil //nolint:nilerr // this value doesn't matter to errgroup.Wait()

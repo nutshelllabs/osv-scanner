@@ -7,6 +7,8 @@ import (
 )
 
 func TestInitializeExternalAccessorsUsesCachedMatcher(t *testing.T) {
+	t.Parallel()
+
 	accessors, err := initializeExternalAccessors(ScannerActions{})
 	if err != nil {
 		t.Fatalf("initializeExternalAccessors() error = %v", err)
@@ -18,6 +20,8 @@ func TestInitializeExternalAccessorsUsesCachedMatcher(t *testing.T) {
 }
 
 func TestInitializeExternalAccessorsUsesCachedMatcherForGitCommits(t *testing.T) {
+	t.Parallel()
+
 	accessors, err := initializeExternalAccessors(ScannerActions{
 		GitCommits: []string{"33dffa3909a67e1b5d22647128ab7eb6e53fd0c7"},
 	})

@@ -1,3 +1,11 @@
+# v2.3.8-ns.1
+
+### Changes:
+
+- Rebase Nutshell's OSV Scanner fork to upstream v2.3.8.
+- Use the cached OSV matcher for online scans while keeping cached package matching scoped to Go packages.
+- Preserve direct OSV queries for commit-based and non-Go package matching.
+
 # v2.3.7/v2.3.8
 
 ### Fixes:

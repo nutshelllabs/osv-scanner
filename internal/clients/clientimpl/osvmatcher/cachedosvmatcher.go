@@ -386,6 +386,10 @@ func (matcher *CachedOSVMatcher) matchDirectQueries(ctx context.Context, pkgs []
 }
 
 func (matcher *CachedOSVMatcher) logSummary(inventoryCount int, plan cachedQueryPlan, metrics batchQueryMetrics) {
+	if len(plan.queries) == 0 && plan.cacheHits == 0 && plan.duplicateSuppressed == 0 {
+		return
+	}
+
 	cmdlogger.Infof("osv matcher=cached")
 	cmdlogger.Infof("  summary:")
 	cmdlogger.Infof("  - inventories=%d", inventoryCount)
@@ -409,6 +413,13 @@ func shouldUseCachedPackageQuery(pkg *extractor.Package) bool {
 }
 
 func cachedPackageQuery(pkg *extractor.Package) (*api.Query, packageCacheKey, bool) {
+	if imodels.Name(pkg) == "" || imodels.Ecosystem(pkg).IsEmpty() || imodels.Version(pkg) == "" {
+		return nil, packageCacheKey{}, false
+	}
+	if imodels.Ecosystem(pkg).String() != "Go" {
+		return nil, packageCacheKey{}, false
+	}
+
 	query := pkgToQuery(pkg)
 	if query == nil || query.GetPackage() == nil || query.GetVersion() == "" {
 		return nil, packageCacheKey{}, false
@@ -416,17 +427,21 @@ func cachedPackageQuery(pkg *extractor.Package) (*api.Query, packageCacheKey, bo
 	if query.GetPackage().GetName() == "" || query.GetPackage().GetEcosystem() == "" {
 		return nil, packageCacheKey{}, false
 	}
-	if query.GetPackage().GetEcosystem() != "Go" {
-		return nil, packageCacheKey{}, false
-	}
 	if _, err := semantic.Parse(query.GetVersion(), query.GetPackage().GetEcosystem()); err != nil {
 		return nil, packageCacheKey{}, false
 	}
 
-	return query, packageCacheKey{
+	cacheKey := packageCacheKey{
 		Name:      query.GetPackage().GetName(),
 		Ecosystem: query.GetPackage().GetEcosystem(),
-	}, true
+	}
+
+	return &api.Query{
+		Package: &osvschema.Package{
+			Name:      cacheKey.Name,
+			Ecosystem: cacheKey.Ecosystem,
+		},
+	}, cacheKey, true
 }
 
 func cacheKeyForPackage(pkg *extractor.Package) (packageCacheKey, bool) {

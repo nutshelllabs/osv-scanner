@@ -138,7 +138,6 @@ func initializeExternalAccessors(actions ScannerActions) (ExternalAccessors, err
 	// Online Mode
 	// -----------
 	// --- Vulnerability Matcher ---
-	cmdlogger.Infof("Using cached OSV matcher for online scan")
 	// Cache package vulnerability sets once per scan so repeated Go dependencies
 	// across multiple manifests do not trigger duplicate OSV package queries.
 	// Commit-based and non-Go package queries still pass through directly.

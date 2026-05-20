@@ -187,6 +187,9 @@ func TestCachedOSVMatcher_MatchVulnerabilitiesPassesThroughCommitQueries(t *test
 	if recordedBatches[0][0].GetPackage().GetName() != "abc" || recordedBatches[0][0].GetCommit() != "" {
 		t.Fatalf("package query = %#v, want package abc query", recordedBatches[0][0])
 	}
+	if got := recordedBatches[0][0].GetVersion(); got != "" {
+		t.Fatalf("cached package query version = %q, want empty package-level query", got)
+	}
 
 	if got, want := len(recordedBatches[1]), 2; got != want {
 		t.Fatalf("passthrough query batch size = %d, want %d", got, want)
